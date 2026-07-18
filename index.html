@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Погода Алтай — VNNOX</title>
+    <style>
+        /* Обнуляем все отступы и скрываем полосы прокрутки */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000000; /* Черный фон, чтобы экран не мигал белым при обновлении */
+        }
+
+        /* Контейнер, который заставит виджет занять всю ширину зоны */
+        .weather-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="weather-container">
+        <!-- ТВОЙ СКРИПТ ПОГОДЫ БЕЗ ИЗМЕНЕНИЙ -->
+        <a class="weatherwidget-io" href="https://forecast7.com/ru/49d7384d27/zyryanovsk/" data-label_1="АЛТАЙ" data-label_2="ПОГОДА" data-font="Arial" data-icons="Climacons Animated" data-days="5" data-theme="original" >АЛТАЙ ПОГОДА</a>
+        <script>
+        !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
+        </script>
+        <!-- КОНЕЦ СКРИПТА -->
+    </div>
+
+</body>
+</html>
