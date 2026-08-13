@@ -1,254 +1,464 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Погода Алтай — Исправленный виджет</title>
-    <style>
-        /* ==========================================
-           1. КОМПАКТНЫЕ СТИЛИ (ФИКС ОШИБОК ВЕРСТКИ)
-           ========================================== */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 384px; /* Жесткая ширина экрана */
-            height: 100%;
-            overflow: hidden;
-            background-color: #205473; /* Фирменный сине-серый фон */
-            font-family: 'Arial', 'Helvetica', sans-serif;
-            color: #ffffff;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LED Screen Display Layout</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-        .widget-wrapper {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%;
-            justify-content: space-between;
-            box-sizing: border-box;
-        }
+    html, body {
+      width: 384px;
+      height: 1152px;
+      min-width: 384px;
+      max-width: 384px;
+      min-height: 1152px;
+      max-height: 1152px;
+      overflow: hidden;
+      background-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #ffffff;
+      cursor: none;
+      touch-action: none;
+    }
 
-        /* --- ВЕРХНЯЯ ЧАСТЬ --- */
-        .current-weather {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px 10px 15px; /* Уменьшили отступы */
-            box-sizing: border-box;
-            width: 100%;
-        }
+    /* Главный холст 384x1152 */
+    .screen-canvas {
+      width: 384px;
+      height: 1152px;
+      position: relative;
+      background-color: transparent;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .location-block {
-            flex: 1.2;
-            max-width: 140px; /* Ограничение, чтобы не двигать иконку */
-        }
+    /* ========================================================= */
+    /* 🔒 БЛОК ПОГОДЫ - 250px                                    */
+    /* ========================================================= */
+    .weather-widget {
+      width: 384px;
+      height: 250px;
+      min-height: 250px;
+      max-height: 250px;
+      background: linear-gradient(180deg, rgba(10, 16, 26, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
 
-        .city-name {
-            font-size: 26px; /* Оптимизировано */
-            font-weight: 900;
-            text-transform: uppercase;
-            line-height: 1.1;
-        }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 42px;
+    }
 
-        .sub-label {
-            font-size: 16px; /* Уменьшено */
-            font-weight: bold;
-            opacity: 0.8;
-            text-transform: uppercase;
-            margin-top: 1px;
-        }
+    .location-info {
+      display: flex;
+      flex-direction: column;
+    }
 
-        /* Центральная иконка */
-        #current-icon-box {
-            flex: 0.8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    .city-name {
+      font-size: 21px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: #00f0ff;
+      text-transform: uppercase;
+    }
 
-        /* Блок температуры справа */
-        .temp-block {
-            flex: 1.2;
-            text-align: right;
-            max-width: 140px;
-        }
+    .date-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
 
-        .current-temp {
-            font-size: 52px; /* Уменьшено, чтобы цифры не вылезали за экран */
-            font-weight: bold;
-            line-height: 1;
-        }
+    .clock-text {
+      font-size: 38px;
+      font-weight: 800;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+    }
 
-        .current-status {
-            font-size: 13px; /* Сделано компактнее */
-            opacity: 0.9;
-            line-height: 1.2;
-            margin-top: 2px;
-        }
+    .current-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 90px;
+      padding: 0 4px;
+    }
 
-        /* --- НИЖНЯЯ ЧАСТЬ (ПРОГНОЗ) --- */
-        .forecast-container {
-            display: flex;
-            width: 100%;
-            background-color: rgba(0, 0, 0, 0.08);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 10px 0; /* Сузили подвал */
-            box-sizing: border-box;
-        }
+    .temp-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-        .forecast-day {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
+    .main-icon-box {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .day-name {
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
+    .main-icon-box svg {
+      width: 58px;
+      height: 58px;
+      display: block;
+    }
 
-        .day-temp {
-            font-size: 15px;
-            font-weight: bold;
-            color: #ff8a75;
-            margin-top: 8px;
-            margin-bottom: 1px;
-        }
+    .temp-value {
+      font-size: 54px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1;
+    }
 
-        .night-temp {
-            font-size: 13px;
-            font-weight: bold;
-            color: #a5cce6;
-        }
+    .details-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
 
-        /* --- РАЗМЕРЫ ИКОНОК (SVG) --- */
-        .icon-svg {
-            width: 48px;  /* Уменьшено с 60px */
-            height: 48px;
-            fill: none;
-            stroke: #e0e0e0;
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        
-        .forecast-container .icon-svg {
-            width: 26px;  /* Уменьшено с 34px */
-            height: 26px;
-            stroke-width: 3.5;
-        }
-    </style>
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .feels-like {
+      color: #ffd700;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    /* Сегмент прогноза на 3 дня (без изменений размеров) */
+    .forecast-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      height: 85px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      padding-top: 6px;
+    }
+
+    .forecast-day {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 6px 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .fc-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .fc-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fc-icon svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
+    .fc-temps {
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      gap: 4px;
+    }
+
+    .fc-max { color: #ffffff; }
+    .fc-min { color: #64748b; }
+
+    /* ========================================================= */
+    /* 🎬 СРЕДНЯЯ ЗОНА С ВИДЕОПЛЕЕРОМ (842px)                     */
+    /* ========================================================= */
+    .middle-area {
+      flex: 1;
+      width: 384px;
+      height: 842px;
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .middle-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ========================================================= */
+    /* ⬛ НИЖНЯЯ ЧЕРНАЯ ПОЛОСА (60px)                            */
+    /* ========================================================= */
+    .bottom-bar {
+      width: 384px;
+      height: 60px;
+      min-height: 60px;
+      max-height: 60px;
+      background-color: #000000;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
 </head>
 <body>
 
-    <div class="widget-wrapper">
-        
-        <!-- ВЕРХ: ТЕКУЩАЯ ПОГОДА -->
-        <div class="current-weather">
-            <div class="location-block">
-                <div class="city-name">Алтай</div>
-                <div class="sub-label">Погода</div>
-            </div>
-            
-            <div id="current-icon-box">
-                <!-- Сюда вставится SVG иконка -->
-            </div>
-            
-            <div class="temp-block">
-                <div class="current-temp" id="current-temp">--°C</div>
-                <div class="current-status" id="current-status">...</div>
-            </div>
+  <div class="screen-canvas">
+    
+    <!-- ========================================================= -->
+    <!-- 🔒 БЛОК ПОГОДЫ (250px)                                    -->
+    <!-- ========================================================= -->
+    <div class="weather-widget">
+      <div class="header-row">
+        <div class="location-info">
+          <div class="city-name" id="cityName">АЛТАЙ</div>
+          <div class="date-text" id="dateText">ПН, 27 ИЮЛЯ</div>
+        </div>
+        <div class="clock-text" id="clock">00:00</div>
+      </div>
+
+      <div class="current-row">
+        <div class="temp-block">
+          <div class="main-icon-box" id="weatherIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2">
+              <circle cx="12" cy="12" r="5" fill="#ffd700"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+          </div>
+          <div class="temp-value" id="tempValue">+20°</div>
         </div>
 
-        <!-- НИЗ: ПРОГНОЗ НА 5 ДНЕЙ -->
-        <div class="forecast-container" id="forecast-box">
-            <!-- Сюда сгенерируются 5 колонок -->
+        <div class="details-block">
+          <div class="feels-like" id="feelsLike">Ощ. +20°</div>
+          <div class="detail-item">
+            <span>💨</span>
+            <span id="windSpeed">3 м/с</span>
+          </div>
+          <div class="detail-item">
+            <span>💧</span>
+            <span id="humidity">50%</span>
+          </div>
         </div>
+      </div>
 
+      <div class="forecast-row" id="forecastRow">
+        <div class="forecast-day">
+          <span class="fc-title">ВТ</span>
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2">
+              <circle cx="12" cy="12" r="5" fill="#ffd700"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/>
+            </svg>
+          </div>
+          <div class="fc-temps"><span class="fc-max">+22°</span><span class="fc-min">+12°</span></div>
+        </div>
+        <div class="forecast-day">
+          <span class="fc-title">СР</span>
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" fill="rgba(0,240,255,0.2)"/>
+            </svg>
+          </div>
+          <div class="fc-temps"><span class="fc-max">+24°</span><span class="fc-min">+14°</span></div>
+        </div>
+        <div class="forecast-day">
+          <span class="fc-title">ЧТ</span>
+          <div class="fc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2">
+              <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/>
+              <path d="M8 19v2M12 19v2M16 19v2"/>
+            </svg>
+          </div>
+          <div class="fc-temps"><span class="fc-max">+19°</span><span class="fc-min">+10°</span></div>
+        </div>
+      </div>
     </div>
 
-    <!-- ==========================================
-       2. СКРИПТ (БЕЗ ИЗМЕНЕНИЙ В ЛОГИКЕ)
-       ========================================== -->
-    <script>
-        const lat = 49.73;
-        const lon = 84.27;
-        const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+    <!-- 🎬 СРЕДНЯЯ ЗОНА С ВИДЕО (842px) -->
+    <div class="middle-area">
+      <video class="middle-video" id="promoVideo" autoplay loop muted playsinline>
+        <source src="video.mp4" type="video/mp4">
+        Ваш браузер не поддерживает видеотег.
+      </video>
+    </div>
 
-        const daysOfWeek = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+    <!-- НИЖНЯЯ ЧЕРНАЯ ПОЛОСА (60px) -->
+    <div class="bottom-bar" id="bottomBar"></div>
 
-        const weatherStatuses = {
-            0: "ясно", 1: "преимущ. ясно", 2: "облачно", 3: "пасмурно",
-            45: "туман", 48: "изморозь", 51: "морось", 53: "морось", 55: "морось",
-            61: "неб. дождь", 63: "дождь", 65: "сил. дождь", 71: "неб. снег",
-            73: "снегопад", 75: "снегопад", 80: "ливень", 81: "ливень",
-            82: "сил. ливень", 85: "снег", 86: "снегопад", 95: "гроза"
-        };
+  </div>
 
-        const iconsSvg = {
-            clear: `<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`,
-            cloudy: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 15h9a5 5 0 0 0 0-10z"/></svg>`,
-            rain: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M16 13v8M12 15v6M8 13v8M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>`,
-            snow: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25M8 16h.01M12 16h.01M16 16h.01M12 19h.01"/></svg>`,
-            thunder: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 8.58M13 11l-4 6h6l-4 6"/></svg>`
-        };
+  <script>
+    const CONFIG = {
+      cityName: 'АЛТАЙ',
+      lat: 49.7252,
+      lon: 84.2736,
+      updateIntervalMinutes: 10
+    };
 
-        function getIconByCode(code) {
-            if ([0, 1].includes(code)) return iconsSvg.clear;
-            if ([2, 3, 45, 48].includes(code)) return iconsSvg.cloudy;
-            if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) return iconsSvg.rain;
-            if ([71, 73, 75, 77, 85, 86].includes(code)) return iconsSvg.snow;
-            if ([95, 96, 99].includes(code)) return iconsSvg.thunder;
-            return iconsSvg.cloudy;
+    function updateClock() {
+      const now = new Date();
+      
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${hours}:${minutes}`;
+
+      const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+      const months = ['ЯНВ', 'ФЕВ', 'МАР', 'АПР', 'МАЙ', 'ИЮН', 'ИЮЛ', 'АВГ', 'СЕН', 'ОКТ', 'НОЯ', 'ДЕК'];
+      
+      const dayName = days[now.getDay()];
+      const dayNum = now.getDate();
+      const monthName = months[now.getMonth()];
+      
+      document.getElementById('dateText').textContent = `${dayName}, ${dayNum} ${monthName}`;
+    }
+
+    function getWeatherSVG(code) {
+      if (code <= 1) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2">
+          <circle cx="12" cy="12" r="5" fill="#ffd700"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>`;
+      }
+      if (code <= 3) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" fill="rgba(0,240,255,0.2)"/>
+        </svg>`;
+      }
+      if (code <= 48) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
+          <path d="M5 9h14M3 12h18M5 15h14M7 18h10"/>
+        </svg>`;
+      }
+      if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2">
+          <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/>
+          <path d="M8 18v3M12 18v3M16 18v3"/>
+        </svg>`;
+      }
+      if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
+          <path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/>
+          <circle cx="8" cy="19" r="1" fill="#ffffff"/>
+          <circle cx="12" cy="20" r="1" fill="#ffffff"/>
+          <circle cx="16" cy="19" r="1" fill="#ffffff"/>
+        </svg>`;
+      }
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2">
+        <path d="M19 16.9A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 3 16.3" stroke="#00f0ff"/>
+        <polygon points="13 11 9 17 15 17 11 23" fill="#ffd700"/>
+      </svg>`;
+    }
+
+    async function fetchWeather() {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Ошибка сети');
+        const data = await response.json();
+
+        localStorage.setItem('weather_cache_altai', JSON.stringify(data));
+        renderWeather(data);
+      } catch (err) {
+        console.warn('Используем кеш погоды:', err);
+        const cached = localStorage.getItem('weather_cache_altai');
+        if (cached) {
+          renderWeather(JSON.parse(cached));
         }
+      }
+    }
 
-        async function updateWeather() {
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
+    function renderWeather(data) {
+      if (typeof data === 'string') data = JSON.parse(data);
 
-                const currentTemp = Math.round(data.current.temperature_2m);
-                const currentCode = data.current.weather_code;
-                
-                document.getElementById('current-temp').innerText = `${currentTemp}°C`;
-                document.getElementById('current-status').innerText = weatherStatuses[currentCode] || "облачно";
-                document.getElementById('current-icon-box').innerHTML = getIconByCode(currentCode);
+      const current = data.current;
+      const daily = data.daily;
 
-                const forecastBox = document.getElementById('forecast-box');
-                forecastBox.innerHTML = '';
+      const temp = Math.round(current.temperature_2m);
+      const feels = Math.round(current.apparent_temperature);
+      document.getElementById('tempValue').textContent = `${temp > 0 ? '+' : ''}${temp}°`;
+      document.getElementById('feelsLike').textContent = `Ощ. ${feels > 0 ? '+' : ''}${feels}°`;
 
-                for (let i = 0; i < 5; i++) {
-                    const date = new Date(data.daily.time[i]);
-                    const dayName = daysOfWeek[date.getDay()];
-                    const maxTemp = Math.round(data.daily.temperature_2m_max[i]);
-                    const minTemp = Math.round(data.daily.temperature_2m_min[i]);
-                    const dayCode = data.daily.weather_code[i];
+      document.getElementById('humidity').textContent = `${Math.round(current.relative_humidity_2m)}%`;
+      document.getElementById('windSpeed').textContent = `${Math.round(current.wind_speed_10m)} м/с`;
 
-                    const dayElement = document.createElement('div');
-                    dayElement.className = 'forecast-day';
-                    
-                    dayElement.innerHTML = `
-                        <div class="day-name">${dayName}</div>
-                        ${getIconByCode(dayCode)}
-                        <div class="day-temp">${maxTemp}°</div>
-                        <div class="night-temp">${minTemp}°</div>
-                    `;
-                    forecastBox.appendChild(dayElement);
-                }
+      document.getElementById('weatherIcon').innerHTML = getWeatherSVG(current.weather_code);
 
-            } catch (error) {
-                console.error("Ошибка обновления:", error);
-                document.getElementById('current-status').innerText = "ошибка";
-            }
-        }
+      const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+      let forecastHTML = '';
 
-        updateWeather();
-        setInterval(updateWeather, 15 * 60 * 1000);
-    </script>
+      for (let i = 1; i <= 3; i++) {
+        if (!daily || !daily.time || !daily.time[i]) break;
+        
+        const dateObj = new Date(daily.time[i]);
+        const dayName = days[dateObj.getDay()];
+        const maxT = Math.round(daily.temperature_2m_max[i]);
+        const minT = Math.round(daily.temperature_2m_min[i]);
+        const code = daily.weather_code[i];
+
+        forecastHTML += `
+          <div class="forecast-day">
+            <span class="fc-title">${dayName}</span>
+            <div class="fc-icon">${getWeatherSVG(code)}</div>
+            <div class="fc-temps">
+              <span class="fc-max">${maxT > 0 ? '+' : ''}${maxT}°</span>
+              <span class="fc-min">${minT > 0 ? '+' : ''}${minT}°</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (forecastHTML) {
+        document.getElementById('forecastRow').innerHTML = forecastHTML;
+      }
+    }
+
+    // Автозапуск видео при загрузке
+    window.addEventListener('DOMContentLoaded', () => {
+      const video = document.getElementById('promoVideo');
+      if (video) {
+        video.play().catch(e => console.log("Автозапуск видео ждет взаимодействия:", e));
+      }
+    });
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    fetchWeather();
+    setInterval(fetchWeather, CONFIG.updateIntervalMinutes * 60 * 1000);
+  </script>
 </body>
 </html>
