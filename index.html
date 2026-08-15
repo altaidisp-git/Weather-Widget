@@ -41,15 +41,15 @@
     }
 
     /* ========================================================= */
-    /* 🔒 БЛОК ПОГОДЫ - 350px                                    */
+    /* 🔒 БЛОК ПОГОДЫ - 220px (БЕЗ ПРОГНОЗА)                      */
     /* ========================================================= */
     .weather-widget {
       width: 384px;
-      height: 350px;
-      min-height: 350px;
-      max-height: 350px;
+      height: 220px;
+      min-height: 220px;
+      max-height: 220px;
       background-color: #252524;
-      padding: 10px 16px;
+      padding: 12px 16px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -162,65 +162,13 @@
       line-height: 1;
     }
 
-    /* Сегмент прогноза на 3 дня */
-    .forecast-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      height: 110px;
-      border-top: 1px solid rgba(255, 255, 255, 0.15);
-      padding-top: 8px;
-    }
-
-    .forecast-day {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      padding: 6px 4px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .fc-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: #94a3b8;
-      text-transform: uppercase;
-    }
-
-    .fc-icon {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .fc-icon svg {
-      width: 34px;
-      height: 34px;
-      display: block;
-    }
-
-    .fc-temps {
-      font-size: 15px;
-      font-weight: 800;
-      display: flex;
-      gap: 6px;
-    }
-
-    .fc-max { color: #ffffff; }
-    .fc-min { color: #64748b; }
-
     /* ========================================================= */
-    /* 🎬 СРЕДНЯЯ ЗОНА С ВИДЕОПЛЕЕРОМ (742px)                     */
+    /* 🎬 СРЕДНЯЯ ЗОНА С ВИДЕОПЛЕЕРОМ (872px)                     */
     /* ========================================================= */
     .middle-area {
       flex: 1;
       width: 384px;
-      height: 742px;
+      height: 872px;
       background: transparent;
       position: relative;
       overflow: hidden;
@@ -307,7 +255,7 @@
   <div class="screen-canvas">
     
     <!-- ========================================================= -->
-    <!-- 🔒 БЛОК ПОГОДЫ (350px)                                    -->
+    <!-- 🔒 БЛОК ПОГОДЫ (220px)                                    -->
     <!-- ========================================================= -->
     <div class="weather-widget" id="weatherWidget">
       <div class="header-row">
@@ -320,11 +268,11 @@
           <div class="sub-weather-row">
             <div class="detail-item">
               <span>💨</span>
-              <span id="windSpeed">3 м/с</span>
+              <span id="windSpeed">-- м/с</span>
             </div>
             <div class="detail-item">
               <span>💧</span>
-              <span id="humidity">50%</span>
+              <span id="humidity">--%</span>
             </div>
           </div>
         </div>
@@ -336,11 +284,9 @@
           <div class="temp-value" id="tempValue">--°</div>
         </div>
       </div>
-
-      <div class="forecast-row" id="forecastRow"></div>
     </div>
 
-    <!-- 🎬 СРЕДНЯЯ ЗОНА С ВИДЕОПЛЕЕРОМ (742px) -->
+    <!-- 🎬 СРЕДНЯЯ ЗОНА С ВИДЕОПЛЕЕРОМ (872px) -->
     <div class="middle-area">
       <div class="video-placeholder" id="videoPlaceholder">
         <div class="placeholder-icon">🎬</div>
@@ -395,7 +341,6 @@
       const widget = document.getElementById('weatherWidget');
       if (!widget) return;
 
-      // С 6:00 до 17:59 (часы 6..17) — более светлый дневной фон
       if (currentHour >= 6 && currentHour < 18) {
         widget.classList.add('day-theme');
         widget.classList.remove('night-theme');
@@ -444,8 +389,7 @@
 
     async function fetchWeather() {
       try {
-        // Добавлен параметр &wind_speed_unit=ms, чтобы скорость ветра возвращалась сразу в м/с (по умолчанию Open-Meteo шлёт в км/ч)
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&wind_speed_unit=ms&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&wind_speed_unit=ms&timezone=auto`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error('Ошибка сети');
@@ -467,7 +411,6 @@
       if (!data || !data.current) return;
 
       const current = data.current;
-      const daily = data.daily;
 
       const temp = Math.round(current.temperature_2m);
       const tempEl = document.getElementById('tempValue');
@@ -488,36 +431,6 @@
       const iconEl = document.getElementById('weatherIcon');
       if (iconEl) {
         iconEl.innerHTML = getWeatherSVG(current.weather_code);
-      }
-
-      const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
-      let forecastHTML = '';
-
-      for (let i = 1; i <= 3; i++) {
-        if (!daily || !daily.time || !daily.time[i]) break;
-        
-        // Добавлен фикс 'T12:00:00' для исключения сдвигов дня недели из-за часовых поясов при парсинге даты
-        const dateObj = new Date(daily.time[i] + 'T12:00:00');
-        const dayName = days[dateObj.getDay()];
-        const maxT = Math.round(daily.temperature_2m_max[i]);
-        const minT = Math.round(daily.temperature_2m_min[i]);
-        const code = daily.weather_code[i];
-
-        forecastHTML += `
-          <div class="forecast-day">
-            <span class="fc-title">${dayName}</span>
-            <div class="fc-icon">${getWeatherSVG(code)}</div>
-            <div class="fc-temps">
-              <span class="fc-max">${maxT > 0 ? '+' : ''}${maxT}°</span>
-              <span class="fc-min">${minT > 0 ? '+' : ''}${minT}°</span>
-            </div>
-          </div>
-        `;
-      }
-
-      const forecastEl = document.getElementById('forecastRow');
-      if (forecastEl && forecastHTML) {
-        forecastEl.innerHTML = forecastHTML;
       }
     }
 
